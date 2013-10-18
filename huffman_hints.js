@@ -42,9 +42,13 @@ var oldHints = {};
             this._hintInput = "";
         },
 
-        _updateStatusline: function () {
-            statusline.updateInputBuffer((hints.escNumbers ? mappings.getMapLeader() : "") + (this._hintNumber ? this._hintInput : ""));
-        },
+        _updateStatusline: newFunction(Hints.prototype._updateStatusline,
+            function (source) {
+                return source.replace(
+                    "this._num2chars(this._hintNumber)",
+                    "this._hintInput"
+                );
+            }),
 
         _showHints: newFunction(Hints.prototype._showHints,
             function (source) {
