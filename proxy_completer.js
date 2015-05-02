@@ -81,7 +81,8 @@
         };
         for (var i = 0; i < Math.min(100, items.length); i++) {
             var a = items[i].firstChild;
-            if (a.tagName == "a" || a.tagName == "A") {
+            if ((a.tagName == "a" || a.tagName == "A") &&
+                    a.textContent && a.title && a.className) {
                 var host = a.textContent;
                 var country = a.title;
                 var type = a.className;
