@@ -22,18 +22,8 @@ var oldHints = {};
 
         _generate: function (win, screen) {
             oldHints._generate.call(this, win, screen);
-            // 重み weight を調整してリンクに割り当てる文字列の長さを調整できるかもしれない。
-            //if (!win) {
-            //    win = config.browser.contentWindow;
-            //}
-            //let cx = win.innerWidth / 2;
-            //let cy = win.innerHeight / 2;
             let weights = new Array(this._pageHints.length);
             for (let i = 0; i < weights.length; i++) {
-                //let x = parseInt(this._pageHints[i].span.style.left);
-                //let y = parseInt(this._pageHints[i].span.style.top);
-                //let d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
-                //weights[i] = Math.floor((cx * cx + cy * cy - d) / 2500);
                 weights[i] = 1;
             }
             // uses n-ary Huffman coding library defined in `huffman_coding.js`.
