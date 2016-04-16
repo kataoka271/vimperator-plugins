@@ -1,5 +1,9 @@
 (function () {
 
+    commands.add(["tabdu[ulicate]"], "duplicate current tab", function (args) {
+            gBrowser.duplicateTab(gBrowser.mCurrentTab);
+        });
+
     commands.add(["tabren[ame]"], "rename current tab", function (args) {
             gBrowser.renameTab(gBrowser.mCurrentTab);
         });
