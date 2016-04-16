@@ -1,41 +1,36 @@
 (function () {
 
-    function HTMLParser(aHTMLString){
+    function parseHTML(aHTMLString){ // {{{
         var html = document.implementation.createDocument(
             "http://www.w3.org/1999/xhtml", "html", null),
         body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
         html.documentElement.appendChild(body);
-
         body.appendChild(Components.classes["@mozilla.org/feed-unescapehtml;1"]
             .getService(Components.interfaces.nsIScriptableUnescapeHTML)
             .parseFragment(aHTMLString, false, null, body));
-
         return body;
-    }
+    } // }}}
 
-    // Proxy class handles proxy setting in the browser.
 
-    var Proxy = function () {
-        this._load();
-    };
+    var Proxy = function () { // {{{
+        this.load();
+    }; // }}}
 
-    // loads proxy setting.
-    Proxy.prototype._load = function (value) {
+    Proxy.prototype.load = function () { // {{{
         this.type = options.getPref("network.proxy.type");
         this.host = options.getPref("network.proxy.http");
         this.port = options.getPref("network.proxy.http_port");
-    };
+    }; // }}}
 
-    // sets proxy setting.
-    Proxy.prototype.set = function (value) {
-        var d = {
+    Proxy.prototype.save = function (value) { // {{{
+        var s2n = {
             'none': 0,
             'pac': 2,
             'auto-detect': 4,
             'system': 5
         };
-        if (d[value] != undefined) {
-            options.setPref("network.proxy.type", d[value]);
+        if (typeof s2n[value] !== "undefined") {
+            options.setPref("network.proxy.type", s2n[value]);
             options.setPref("network.proxy.http", '');
             options.setPref("network.proxy.http_port", 0);
         } else {
@@ -44,34 +39,32 @@
             options.setPref("network.proxy.http", host);
             options.setPref("network.proxy.http_port", parseInt(port));
         }
-        this._load();
-    };
+        this.load();
+    }; // }}}
 
-    // display current setting.
-    Proxy.prototype.echo = function () {
-        if (this.type == 1) {
+    Proxy.prototype.echo = function () { // {{{
+        if (this.type === 1) {
             liberator.echo("current setting = " + this.host + ":" + this.port);
         } else {
-            var d = {
+            var n2s = {
                 0: 'none',
                 2: 'pac',
                 4: 'auto-detect',
                 5: 'system'
             };
-            liberator.echo("current setting = " + d[this.type]);
+            liberator.echo("current setting = " + n2s[this.type]);
         }
-    };
+    }; // }}}
 
-    // Completer class handles vimperator's command completion.
 
-    var Completer = function () {
-        this.proxylist = [];
-        //this.lastupdate = 0;
-    };
+    var CyberSyndromePlr = function () { // {{{
+    } // }}}
 
-    // parse HTML document to an array of proxy completion list.
-    Completer.prototype._parseDocument = function (htmldoc) {
-        var items = htmldoc.getElementsByTagName("li");
+    CyberSyndromePlr.prototype.getSourceURL = function () { // {{{
+        return "http://www.cybersyndrome.net/plr.html";
+    } // }}}
+
+    CyberSyndromePlr.prototype.parse = function (htmlDoc) { // {{{
         var proxylist = new Array();
         var proxytype = {
             'A': 'A (anon, hidden)',
@@ -79,65 +72,71 @@
             'C': 'C (anon, lying)',
             'D': 'D (non-anon, leaking)'
         };
+        var items = htmlDoc.getElementsByTagName("tr");
+        for (var i = 1; i < Math.min(101, items.length); i++) {
+            var tds = items[i].childNodes;
+            var host = tds[1].textContent;
+            var type = tds[3].textContent;
+            var country = tds[4].textContent;
+            proxylist.push([host, country + ": " + proxytype[type]]);
+        }
+        return proxylist;
+    } // }}}
+
+
+    var CyberSyndromePla5 = function () { // {{{
+    } // }}}
+
+    CyberSyndromePla5.prototype.getSourceURL = function () { // {{{
+        return "http://www.cybersyndrome.net/pla5.html";
+    } // }}}
+
+    CyberSyndromePla5.prototype.parse = function (htmlDoc) { // {{{
+        var proxylist = new Array();
+        var proxytype = {
+            'A': 'A (anon, hidden)',
+            'B': 'B (anon, visible)',
+            'C': 'C (anon, lying)',
+            'D': 'D (non-anon, leaking)'
+        };
+        var items = htmlDoc.getElementsByTagName("li");
         for (var i = 0; i < Math.min(100, items.length); i++) {
             var a = items[i].firstChild;
-            if ((a.tagName == "a" || a.tagName == "A") &&
-                    a.textContent && a.title && a.className) {
+            if ((a.tagName === "a" || a.tagName === "A") &&
+                 a.textContent && a.title && a.className) {
                 var host = a.textContent;
                 var country = a.title;
                 var type = a.className;
                 proxylist.push([host, country + ": " + proxytype[type]]);
             }
         }
-        this.proxylist = proxylist;
-    };
+        return proxylist;
+    } // }}}
 
-    // fetch proxy list from "www.cybersyndrome.net".
-    Completer.prototype.communicate = function (callback) {
-        // don't communicate in 5 minutes.
-        //var now = new Date().getTime();
-        //if (now - this.lastupdate < 5 * 60 * 1000) {
-        //    if (callback != undefined) {
-        //        callback();
-        //    }
-        //    return;
-        //}
-        //this.lastupdate = now;
-        var url = "http://www.cybersyndrome.net/pla5.html";
+
+    var Completer = function (source) { // {{{
+        this.proxylist = [];
+        this.source = source;
+    }; // }}}
+
+    Completer.prototype.communicate = function (onFinish) { // {{{
+        var url = this.source.getSourceURL();
         var xhr = XMLHttpRequest();
-        if (callback != undefined) {
-            let self = this;
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200) {
-                        self._parseDocument(HTMLParser(xhr.responseText));
-                        callback();
-                    } else {
-                        liberator.echoerr("communication failure: " +
-                                          xhr.statusText);
-                    }
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    this.proxylist = this.source.parse(parseHTML(xhr.responseText));
+                } else {
+                    liberator.echoerr("communication failure: " + xhr.statusText);
                 }
-            };
-            xhr.open("GET", url, true);
-            //xhr.channel.loadFlags |=
-            //    Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
-            xhr.send();
-        } else {
-            xhr.open("GET", url, false);
-            //xhr.channel.loadFlags |=
-            //    Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
-            xhr.send();
-            if (xhr.status == 200) {
-                this._parseDocument(HTMLParser(xhr.responseText));
-            } else {
-                liberator.echoerr("communication failure: " +
-                                  xhr.statusText);
+                onFinish();
             }
-        }
-    };
+        }.bind(this);
+        xhr.open("GET", url, true);
+        xhr.send();
+    }; // }}}
 
-    // yields command completion list.
-    Completer.prototype.getSuggestions = function (args) {
+    Completer.prototype.getSuggestions = function (args) { // {{{
         var suggestions = [
             ['none', 'no proxy'],
             ['pac', 'proxy auto-configuration (PAC)'],
@@ -146,35 +145,38 @@
         ];
         Array.prototype.push.apply(suggestions, this.proxylist);
         function filterFunc(command) {
-            return command[0].indexOf(args) == 0 ||
+            return command[0].indexOf(args) === 0 ||
                    command[1].indexOf(args) >= 0;
         }
         return suggestions.filter(filterFunc);
-    };
+    }; // }}}
 
-    commands.addUserCommand(["proxy"], "set or get proxy setting",
+
+    commands.addUserCommand(["proxy"], "set or get proxy setting", // {{{
         function (args) {
-            var _proxy = new Proxy();
+            var proxy = new Proxy();
             if (args.length > 0) {
-                _proxy.set(args[0]);
+                proxy.save(args[0]);
             }
-            _proxy.echo();
+            proxy.echo();
         },
         {
             completer: function (context, args) {
-                var _completer = new Completer();
+                var completer = new Completer(new CyberSyndromePlr());
                 context.incomplete = true;
                 context.title = ['Proxy'];
-                context.completions = _completer.getSuggestions(args);
+                context.completions = completer.getSuggestions(args);
                 context.filters = [];
                 context.compare = void 0;
-                _completer.communicate(function () {
-                        context.incomplete = false;
-                        context.completions = _completer.getSuggestions(args);
+                completer.communicate(function () {
+                    context.incomplete = false;
+                    context.completions = completer.getSuggestions(args);
                 });
             },
             argCount: "*"
         },
-        true);
+        true); // }}}
 
 })();
+
+// vi: ts=4 sw=4 et foldmethod=marker commentstring=\ //\ %s
