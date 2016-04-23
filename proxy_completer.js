@@ -121,7 +121,7 @@
 
     Completer.prototype.communicate = function (onFinish) { // {{{
         var url = this.source.getSourceURL();
-        var xhr = XMLHttpRequest();
+        var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
