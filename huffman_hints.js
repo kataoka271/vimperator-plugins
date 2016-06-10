@@ -51,7 +51,7 @@ var oldHints = {};
         _checkUnique: newFunction(Hints.prototype._checkUnique,
             function (source) {
                 return source.replace( // line 628
-                    'this._hintNumber * options["hintchars"].length <= this._validHints.length',
+                    'this._hintNumber * options.hintchars.length <= this._validHints.length',
                     'this._hintTree.commonPrefix(this._hintInput).length != 1'
                 );
             }),
